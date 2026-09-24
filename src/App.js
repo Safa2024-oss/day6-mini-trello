@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import Column from './Column';
+import { useTheme } from './ThemeContext';
 import './App.css';
 
 const initialTasks = [
@@ -18,15 +20,11 @@ function App() {
   const [tasks, setTasks] = useState(initialTasks);
   const [newTaskText, setNewTaskText] = useState('');
   const [draggedTaskId, setDraggedTaskId] = useState(null);
+  const { theme, toggleTheme } = useTheme();
 
   function addTask() {
     if (newTaskText.trim() === '') return;
-    const newTask = {
-      id: Date.now(),
-      text: newTaskText,
-      status: 'todo',
-    };
-    setTasks([...tasks, newTask]);
+    setTasks([...tasks, { id: Date.now(), text: newTaskText, status: 'todo' }]);
     setNewTaskText('');
   }
 
@@ -52,8 +50,12 @@ function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${theme}`}>
       <h1>Kanban Board</h1>
+
+      <button onClick={toggleTheme}>
+        Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
+      </button>
 
       <div className="add-task">
         <input
@@ -66,27 +68,15 @@ function App() {
 
       <div className="board">
         {columns.map((column) => (
-          <div
+          <Column
             key={column.id}
-            className="column"
+            column={column}
+            tasks={tasks}
+            onDrop={handleDrop}
             onDragOver={handleDragOver}
-            onDrop={() => handleDrop(column.id)}
-          >
-            <h2>{column.title}</h2>
-            {tasks
-              .filter((task) => task.status === column.id)
-              .map((task) => (
-                <div
-                  key={task.id}
-                  className="task-card"
-                  draggable
-                  onDragStart={() => handleDragStart(task.id)}
-                >
-                  <span>{task.text}</span>
-                  <button onClick={() => deleteTask(task.id)}>✕</button>
-                </div>
-              ))}
-          </div>
+            onDelete={deleteTask}
+            onDragStart={handleDragStart}
+          />
         ))}
       </div>
     </div>
